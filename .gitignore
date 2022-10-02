@@ -1,0 +1,9 @@
+!output/**/.gitkeep
+output/images/*.jpg
+output/vr-video/**/*
+output/*.sql
+!source/.gitkeep
+source/*.mp4
+tmp
+.env
+/.idea/
