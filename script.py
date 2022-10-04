@@ -3,7 +3,7 @@ import uuid
 import os
 import pathlib
 from dotenv import load_dotenv
-from MySQLdb import _mysql
+#from MySQLdb import _mysql
 import shutil
 import ffmpeg
 import subprocess
@@ -19,12 +19,12 @@ temporary_path = os.getcwd() + "/tmp"
 
 # Database server connection
 
-database_connection = _mysql.connect(
-    host=os.getenv("MYSQL_DATABASE_HOST"),
-    user=os.getenv("MYSQL_DATABASE_USER"),
-    password=os.getenv("MYSQL_DATABASE_PASSWORD"),
-    database=os.getenv("MYSQL_DATABASE_NAME"),
-)
+#database_connection = _mysql.connect(
+#    host=os.getenv("MYSQL_DATABASE_HOST"),
+#    user=os.getenv("MYSQL_DATABASE_USER"),
+#    password=os.getenv("MYSQL_DATABASE_PASSWORD"),
+#    database=os.getenv("MYSQL_DATABASE_NAME"),
+#)
 
 # Listing source directory and assign uuid
 
@@ -39,13 +39,13 @@ for entry in os.scandir(source_path):
 
 
 # Check existing vr videos on database by original filename
-for source_file in source_files:
-    database_connection.query(
-        f'SELECT uuid FROM vr_video WHERE original_filename = \'{source_file["original_filename"]}\' LIMIT 1'
-    )
-    result = database_connection.store_result()
-    if len(result.fetch_row()) > 0:
-        raise Exception("Existing file with name: " + source_file["original_filename"])
+#for source_file in source_files:
+#    database_connection.query(
+#        f'SELECT uuid FROM vr_video WHERE original_filename = \'{source_file["original_filename"]}\' LIMIT 1'
+#    )
+#    result = database_connection.store_result()
+#    if len(result.fetch_row()) > 0:
+#        raise Exception("Existing file with name: " + source_file["original_filename"])
 
 
 # Move and rename files
@@ -64,7 +64,7 @@ for source_file in source_files:
 
     vr_videos_properties.append({**{
         'duration_seconds': math.floor(float(probe['format']['duration'])),
-        'file_size': math.floor(float(probe['format']['duration'])),
+        'file_size': math.floor(float(probe['format']['size'])),
         'width': probe['streams'][0]['width'],
         'height': probe['streams'][0]['height'],
         'date': time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(time.ctime(os.path.getmtime(path_file))))
