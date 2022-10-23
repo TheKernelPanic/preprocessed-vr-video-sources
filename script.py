@@ -3,7 +3,7 @@ import uuid
 import os
 import pathlib
 from dotenv import load_dotenv
-#from MySQLdb import _mysql
+from MySQLdb import _mysql
 import shutil
 import ffmpeg
 import subprocess
@@ -13,24 +13,24 @@ load_dotenv()
 
 hosted_on_id = int(input("Host Id: "))
 
-source_path = os.getcwd() + "/source"
-output_path = os.getcwd() + "/output"
-temporary_path = os.getcwd() + "/tmp"
+source_path = os.path.join(os.getcwd(), "source")
+output_path = os.path.join(os.getcwd(), "output")
+temporary_path = os.path.join(os.getcwd(), "tmp")
 
 # Database server connection
 
-#database_connection = _mysql.connect(
-#    host=os.getenv("MYSQL_DATABASE_HOST"),
-#    user=os.getenv("MYSQL_DATABASE_USER"),
-#    password=os.getenv("MYSQL_DATABASE_PASSWORD"),
-#    database=os.getenv("MYSQL_DATABASE_NAME"),
-#)
+database_connection = _mysql.connect(
+    host=os.getenv("MYSQL_DATABASE_HOST"),
+    user=os.getenv("MYSQL_DATABASE_USER"),
+    password=os.getenv("MYSQL_DATABASE_PASSWORD"),
+    database=os.getenv("MYSQL_DATABASE_NAME"),
+)
 
 # Listing source directory and assign uuid
 
 source_files = []
 for entry in os.scandir(source_path):
-   if pathlib.Path(os.getcwd() + '/' + entry.name).suffix != '.mp4':
+   if pathlib.Path(os.path.join(os.getcwd(), entry.name)).suffix != '.mp4':
        continue
    source_files.append({
        'original_filename': entry.name,
@@ -39,27 +39,26 @@ for entry in os.scandir(source_path):
 
 
 # Check existing vr videos on database by original filename
-#for source_file in source_files:
-#    database_connection.query(
-#        f'SELECT uuid FROM vr_video WHERE original_filename = \'{source_file["original_filename"]}\' LIMIT 1'
-#    )
-#    result = database_connection.store_result()
-#    if len(result.fetch_row()) > 0:
-#        raise Exception("Existing file with name: " + source_file["original_filename"])
-
+for source_file in source_files:
+    database_connection.query(
+        f'SELECT uuid FROM vr_video WHERE original_filename = \'{source_file["original_filename"]}\' LIMIT 1'
+    )
+    result = database_connection.store_result()
+    if len(result.fetch_row()) > 0:
+        raise Exception("Existing file with name: " + source_file["original_filename"])
 
 # Move and rename files
 for source_file in source_files:
-    os.mkdir(output_path + '/vr-video/' + source_file["uuid"])
-    shutil.move(source_path + '/' + source_file["original_filename"],output_path + '/vr-video/' + source_file["uuid"] + '/video.mp4')
-    with open(output_path + '/vr-video/' + source_file["uuid"] + '/metadata.txt', 'w') as file:
+    os.mkdir(os.path.join(output_path, 'vr-video', source_file["uuid"]))
+    shutil.move(os.path.join(source_path, source_file["original_filename"]), os.path.join(output_path, 'vr-video', source_file["uuid"], "video.mp4"))
+    with open(os.path.join(output_path, 'vr-video', source_file["uuid"], 'metadata.txt'), 'w') as file:
         file.write(source_file["original_filename"])
     file.close()
 
 # Read property files
 vr_videos_properties = []
 for source_file in source_files:
-    path_file = output_path + '/vr-video/' + source_file['uuid'] + '/video.mp4'
+    path_file = os.path.join(output_path, 'vr-video', source_file['uuid'], 'video.mp4')
     probe = ffmpeg.probe(path_file)
 
     vr_videos_properties.append({**{
@@ -97,20 +96,20 @@ def get_times(duration):
 
 
 for vr_video_properties in vr_videos_properties:
-    path_file = output_path + '/vr-video/' + vr_video_properties['uuid'] + '/video.mp4'
+    path_file = os.path.join(output_path, 'vr-video', vr_video_properties['uuid'], 'video.mp4')  
 
-    if os.path.isdir(temporary_path + '/' + vr_video_properties['uuid']) is False:
-        os.mkdir(temporary_path + '/' + vr_video_properties['uuid'])
+    if os.path.isdir(os.path.join(temporary_path, vr_video_properties['uuid'])) is False:
+        os.mkdir(os.path.join(temporary_path, vr_video_properties['uuid']))
 
     vr_video_properties['images'] = []
     for index, time_format in enumerate(get_times(vr_video_properties['duration_seconds'])):
 
-        output_tmp_image_path = temporary_path + '/' + vr_video_properties['uuid'] + f'/{str(index + 1)}.jpg'
+        output_tmp_image_path = os.path.join(temporary_path, vr_video_properties['uuid'],  f'{str(index + 1)}.jpg')  
         ffmpeg.input(path_file, ss=time_format).filter('scale', 4000, -1).output(output_tmp_image_path, vframes=1).overwrite_output().run(capture_stdout=True, capture_stderr=True)
 
         output_image_filename = vr_video_properties['uuid'] + f'_{str(index + 1)}.jpg'
-        output_image_path = output_path + '/images/' + output_image_filename
-        subprocess.call(f'convert {output_tmp_image_path} -crop 1500x1500+250+250 {output_image_path}', shell=True)
+        output_image_path = os.path.join(output_path, 'images', output_image_filename)
+        subprocess.call(f'magick {output_tmp_image_path} -crop 1500x1500+250+250 {output_image_path}', shell=True)
         vr_video_properties['images'].append(output_image_filename)
 
 
@@ -162,6 +161,6 @@ for vr_video_properties in vr_videos_properties:
 
 sql_script += "COMMIT;"
 
-with open(output_path + f'/transaction-{time.strftime("%Y%m%d-%H%M%S")}.sql', 'w') as file:
+with open(os.path.join(output_path, f'transaction-{time.strftime("%Y%m%d-%H%M%S")}.sql'), 'w') as file:
     file.write(sql_script)
 file.close()
