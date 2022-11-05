@@ -64,8 +64,8 @@ for source_file in source_files:
     vr_videos_properties.append({**{
         'duration_seconds': math.floor(float(probe['format']['duration'])),
         'file_size': math.floor(float(probe['format']['size'])),
-        'width': probe['streams'][0]['width'],
-        'height': probe['streams'][0]['height'],
+        'width': probe['streams'][0]['width'] if 'width' in probe['streams'][0] else 0,
+        'height': probe['streams'][0]['height'] if 'height' in probe['streams'][0] else 0,
         'date': time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(time.ctime(os.path.getmtime(path_file))))
     }, **source_file})
 
