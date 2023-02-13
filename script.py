@@ -138,9 +138,9 @@ for vr_video_properties in vr_videos_properties:
     sql_script += "\n\n"
 
     sql_script += "\tINSERT INTO vr_video "
-    sql_script += "(id, rating, updated_at, hosted_on_id, width, height, viewed_times, uuid, reported, original_filename, file_size, favourite, duration_seconds, description, created_at)"
+    sql_script += "(id, rating, updated_at, hosted_on_id, width, height, viewed_times, uuid, reported, original_filename, file_size, favourite, duration_seconds, description, created_at, format)"
     sql_script += " VALUES "
-    sql_script += f"((@videoId := @videoId + 1), 0, NULL, {hosted_on_id}, {width}, {height}, 0, '{uuid}', 0, '{original_filename}', {file_size}, 0, {duration_seconds}, NULL, '{date}');"
+    sql_script += f"((@videoId := @videoId + 1), 0, NULL, {hosted_on_id}, {width}, {height}, 0, '{uuid}', 0, '{original_filename}', {file_size}, 0, {duration_seconds}, NULL, '{date}', 'STEREO_180_LR');"
     sql_script += "\n\n"
 
     for vr_video_image in vr_video_properties['images']:
